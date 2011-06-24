@@ -39,6 +39,33 @@ def import_moderator(app):
     return module
 
 
+def import_project():
+    '''
+    Import moderator from project root and register all models it contains with
+    moderation. The project root file allows you to add moderation for models
+    that are in libraries outside the project.
+    '''
+    from django.conf import settings
+    from django.utils.importlib import import_module
+    import imp
+    import sys
+    
+    project_root = settings.ROOT_URLCONF.split(".")[0]
+    
+    try:
+        app_path = import_module(project_root).__path__
+    except AttributeError:
+        return None
+
+    try:
+        imp.find_module('moderator', app_path)
+    except ImportError:
+        return None
+    
+    module = import_module("%s.moderator" % project_root)
+    
+    return module    
+    
 def auto_discover():
     '''
     Auto register all apps that have module moderator with moderation
@@ -47,4 +74,6 @@ def auto_discover():
     
     for app in settings.INSTALLED_APPS:
         import_moderator(app)
+    
+    import_project()
     
